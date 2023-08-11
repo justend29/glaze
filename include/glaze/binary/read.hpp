@@ -6,6 +6,7 @@
 #include "glaze/binary/header.hpp"
 #include "glaze/binary/skip.hpp"
 #include "glaze/core/format.hpp"
+#include "glaze/core/null.hpp"
 #include "glaze/core/read.hpp"
 #include "glaze/file/file_ops.hpp"
 #include "glaze/util/dump.hpp"
@@ -524,28 +525,17 @@ namespace glz
 
             if (tag == tag::null) {
                ++it;
-               if constexpr (is_specialization_v<T, std::optional>)
-                  value = std::nullopt;
-               else if constexpr (is_specialization_v<T, std::unique_ptr>)
-                  value = nullptr;
-               else if constexpr (is_specialization_v<T, std::shared_ptr>)
-                  value = nullptr;
+               value = glz::null_traits<T>::make_null();
             }
             else {
                if (!value) {
-                  if constexpr (is_specialization_v<T, std::optional>)
-                     value = std::make_optional<typename T::value_type>();
-                  else if constexpr (is_specialization_v<T, std::unique_ptr>)
-                     value = std::make_unique<typename T::element_type>();
-                  else if constexpr (is_specialization_v<T, std::shared_ptr>)
-                     value = std::make_shared<typename T::element_type>();
-                  else if constexpr (constructible<T>) {
-                     value = meta_construct_v<T>();
+                  if constexpr (glz::can_make_null<T>) {
+                     value = glz::null_traits<T>::make_null();
                   }
                   else {
                      ctx.error = error_code::invalid_nullable_read;
                      return;
-                     // Cannot read into unset nullable that is not std::optional, std::unique_ptr, or std::shared_ptr
+                     // Cannot read into unset nullable that does not offer nullable specialization
                   }
                }
                read<binary>::op<Opts>(*value, ctx, it, end);

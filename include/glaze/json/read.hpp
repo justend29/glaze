@@ -14,6 +14,7 @@
 
 #include "glaze/core/common.hpp"
 #include "glaze/core/format.hpp"
+#include "glaze/core/null.hpp"
 #include "glaze/core/read.hpp"
 #include "glaze/file/file_ops.hpp"
 #include "glaze/json/json_t.hpp"
@@ -41,11 +42,10 @@ namespace glz
       {};
 
       template <auto Opts, class T, class Ctx, class It0, class It1>
-      concept read_json_invocable =
-         requires(T&& value, Ctx&& ctx, It0&& it, It1&& end) {
-            from_json<std::remove_cvref_t<T>>::template op<Opts>(std::forward<T>(value), std::forward<Ctx>(ctx),
-                                                                 std::forward<It0>(it), std::forward<It1>(end));
-         };
+      concept read_json_invocable = requires(T&& value, Ctx&& ctx, It0&& it, It1&& end) {
+         from_json<std::remove_cvref_t<T>>::template op<Opts>(std::forward<T>(value), std::forward<Ctx>(ctx),
+                                                              std::forward<It0>(it), std::forward<It1>(end));
+      };
 
       template <>
       struct read<json>
@@ -484,7 +484,7 @@ namespace glz
                   }
                   else {
                      switch (*it) {
-                     [[likely]] case '"' : {
+                     [[likely]] case '"': {
                         value.append(start, static_cast<size_t>(it - start));
                         ++it;
                         return;
@@ -493,15 +493,15 @@ namespace glz
                      [[unlikely]] case '\f':
                      [[unlikely]] case '\n':
                      [[unlikely]] case '\r':
-                     [[unlikely]] case '\t' : {
+                     [[unlikely]] case '\t': {
                         ctx.error = error_code::syntax_error;
                         return;
                      }
-                     [[unlikely]] case '\0' : {
+                     [[unlikely]] case '\0': {
                         ctx.error = error_code::unexpected_end;
                         return;
                      }
-                     [[unlikely]] case '\\' : {
+                     [[unlikely]] case '\\': {
                         value.append(start, static_cast<size_t>(it - start));
                         ++it;
                         handle_escaped();
@@ -2077,28 +2077,16 @@ namespace glz
             if (*it == 'n') {
                ++it;
                match<"ull">(ctx, it, end);
-               if (bool(ctx.error)) [[unlikely]]
+               if (bool(ctx.error)) [[unlikely]] {
                   return;
-               if constexpr (!std::is_pointer_v<T>) {
-                  value.reset();
                }
+
+               value = glz::null_traits<T>::make_null();
             }
             else {
                if (!value) {
-                  if constexpr (is_specialization_v<T, std::optional>) {
-                     if constexpr (requires { value.emplace(); }) {
-                        value.emplace();
-                     }
-                     else {
-                        value = typename T::value_type{};
-                     }
-                  }
-                  else if constexpr (is_specialization_v<T, std::unique_ptr>)
-                     value = std::make_unique<typename T::element_type>();
-                  else if constexpr (is_specialization_v<T, std::shared_ptr>)
-                     value = std::make_shared<typename T::element_type>();
-                  else if constexpr (constructible<T>) {
-                     value = meta_construct_v<T>();
+                  if constexpr (glz::can_make_null<T>) {
+                     value = glz::null_traits<T>::make_null();
                   }
                   else {
                      ctx.error = error_code::invalid_nullable_read;
