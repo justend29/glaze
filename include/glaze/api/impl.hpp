@@ -91,8 +91,9 @@ namespace glz
       }
 
       template <class Arg_tuple, class F, class Parent, size_t... Is>
-         requires std::invocable<F, Parent, ref_t<std::tuple_element_t<Is, Arg_tuple>>...> decltype(auto)
-      call_args(F&& f, Parent&& parent, [[maybe_unused]] std::span<void*> args, std::index_sequence<Is...>)
+         requires std::invocable<F, Parent, ref_t<std::tuple_element_t<Is, Arg_tuple>>...>
+      decltype(auto) call_args(F&& f, Parent&& parent, [[maybe_unused]] std::span<void*> args,
+                               std::index_sequence<Is...>)
       {
          return f(parent, to_ref<std::tuple_element_t<Is, Arg_tuple>>(args[Is])...);
       }
@@ -173,9 +174,9 @@ namespace glz
       decltype(auto) unwrap(T&& val)
       {
          using V = std::decay_t<T>;
-         if constexpr (detail::nullable_t<V>) {
-            if (val) {
-               return unwrap(*val);
+         if constexpr (readable_nullable_t<V>) {
+            if (!nully_interface<V>::is_null(val)) {
+               return unwrap(nully_interface<V>::value(val));
             }
             else {
                error = "Cannot unwrap null value.";

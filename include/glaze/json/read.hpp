@@ -14,7 +14,7 @@
 
 #include "glaze/core/common.hpp"
 #include "glaze/core/format.hpp"
-#include "glaze/core/null.hpp"
+#include "glaze/core/nully.hpp"
 #include "glaze/core/read.hpp"
 #include "glaze/file/file_ops.hpp"
 #include "glaze/json/json_t.hpp"
@@ -2081,12 +2081,13 @@ namespace glz
                   return;
                }
 
-               value = glz::null_traits<T>::make_null();
+               // requires move assignable
+               value = glz::nully_interface<T>::make_null();
             }
             else {
-               if (!value) {
-                  if constexpr (glz::can_make_null<T>) {
-                     value = glz::null_traits<T>::make_null();
+               if (nully_interface<T>::is_null()) {
+                  if constexpr (can_construct<T>) {
+                     value = nully_interface<T>::make_for_overwrite();
                   }
                   else {
                      ctx.error = error_code::invalid_nullable_read;
@@ -2094,7 +2095,7 @@ namespace glz
                      // Cannot read into unset nullable that is not std::optional, std::unique_ptr, or std::shared_ptr
                   }
                }
-               read<json>::op<Opts>(*value, ctx, it, end);
+               read<json>::op<Opts>(glz::nully_interface<T>::value(value), ctx, it, end);
             }
          }
       };

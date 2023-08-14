@@ -9,6 +9,7 @@
 #include <variant>
 
 #include "glaze/core/format.hpp"
+#include "glaze/core/nully.hpp"
 #include "glaze/core/write.hpp"
 #include "glaze/core/write_chars.hpp"
 #include "glaze/json/ptr.hpp"
@@ -425,7 +426,7 @@ namespace glz
             if constexpr (always_null_t<Value>)
                return true;
             else {
-               return !bool(value);
+               return !static_cast<bool>(value);
             }
          }
          else {
@@ -530,14 +531,14 @@ namespace glz
          }
       };
 
-      template <nullable_t T>
+      template <writable_nullable_t T>
       struct to_json<T>
       {
          template <auto Opts, class... Args>
          GLZ_ALWAYS_INLINE static void op(auto&& value, is_context auto&& ctx, Args&&... args) noexcept
          {
-            if (value)
-               write<json>::op<Opts>(*value, ctx, std::forward<Args>(args)...);
+            if (nully_interface<T>::is_null(value))
+               write<json>::op<Opts>(nully_interface<T>::value(value), ctx, std::forward<Args>(args)...);
             else {
                dump<"null">(std::forward<Args>(args)...);
             }

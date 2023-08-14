@@ -3,6 +3,7 @@
 #pragma once
 
 #include "glaze/api/impl.hpp"
+#include "glaze/core/nully.hpp"
 #include "glaze/json/quoted.hpp"
 #include "glaze/json/write.hpp"
 
@@ -251,13 +252,13 @@ namespace glz
          }
       };
 
-      template <nullable_t T>
+      template <readable_nullable_t T>
       struct to_json_schema<T>
       {
          template <auto Opts>
          static void op(auto& s, auto& defs) noexcept
          {
-            using V = std::decay_t<decltype(*std::declval<std::decay_t<T>>())>;
+            using V = nully_interface<std::decay_t<T>>::value_type;
             to_json_schema<V>::template op<Opts>(s, defs);
             (*s.type).emplace_back("null");
          }

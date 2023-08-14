@@ -55,12 +55,6 @@ namespace glz
       Flags(T) -> Flags<T>;
 
       template <class T>
-      concept local_construct_t = requires { T::glaze::construct; };
-
-      template <class T>
-      concept global_construct_t = requires { meta<T>::construct; };
-
-      template <class T>
       concept local_meta_t = requires { T::glaze::value; };
 
       template <class T>
@@ -75,6 +69,10 @@ namespace glz
       static constexpr glz::tuplet::tuple<> value{};
    };
 
+   template <typename T>
+   using glaze_meta_t = std::conditional<detail::global_meta_t<T>, meta<T>,
+                                         std::conditional<detail::local_meta_t<T>, typename T::glaze, std::monostate>>;
+
    template <class T>
    inline constexpr auto meta_wrapper_v = [] {
       if constexpr (detail::local_meta_t<T>) {
@@ -82,19 +80,6 @@ namespace glz
       }
       else if constexpr (detail::global_meta_t<T>) {
          return meta<T>::value;
-      }
-      else {
-         return empty{};
-      }
-   }();
-
-   template <class T>
-   inline constexpr auto meta_construct_v = [] {
-      if constexpr (detail::local_construct_t<T>) {
-         return T::glaze::construct;
-      }
-      else if constexpr (detail::global_construct_t<T>) {
-         return meta<T>::construct;
       }
       else {
          return empty{};

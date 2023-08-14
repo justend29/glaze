@@ -6,6 +6,7 @@
 #include <utility>
 
 #include "glaze/binary/header.hpp"
+#include "glaze/core/nully.hpp"
 #include "glaze/core/opts.hpp"
 #include "glaze/core/write.hpp"
 #include "glaze/json/json_ptr.hpp"
@@ -407,14 +408,14 @@ namespace glz
          }
       };
 
-      template <nullable_t T>
+      template <writable_nullable_t T>
       struct to_binary<T> final
       {
          template <auto Opts, class... Args>
          GLZ_ALWAYS_INLINE static void op(auto&& value, is_context auto&& ctx, Args&&... args) noexcept
          {
-            if (value) {
-               write<binary>::op<Opts>(*value, ctx, args...);
+            if (nully_interface<T>::is_null(value)) {
+               write<binary>::op<Opts>(nully_interface<T>::value(value), ctx, args...);
             }
             else {
                dump<std::byte(tag::null)>(args...);

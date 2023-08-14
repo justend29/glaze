@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "glaze/util/for_each.hpp"
+#include "glaze/util/type_traits.hpp"
 
 namespace glz
 {
@@ -59,9 +60,6 @@ namespace glz
       using V = std::remove_reference_t<T>;
       static constexpr std::string_view name = detail::join_v<name_v<V>, chars<"&&">>;
    };
-
-   template <class T>
-   concept constant = std::is_const_v<T>;
 
    template <constant T>
    struct meta<T>

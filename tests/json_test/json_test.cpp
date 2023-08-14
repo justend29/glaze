@@ -3611,8 +3611,6 @@ struct custom_unique
    operator bool() { return bool(x); }
 
    T& operator*() { return *x; }
-
-   void reset() { x.reset(); }
 };
 
 template <class T, class... Args>
@@ -3622,9 +3620,10 @@ inline auto make_custom_unique(Args&&... args)
 }
 
 template <class T>
-struct glz::meta<custom_unique<T>>
+struct glz::nully_interface<custom_unique<T>>
 {
-   static constexpr auto construct = [] { return make_custom_unique<T>(); };
+   static constexpr custom_unique<T> make_null() { return make_custom_unique<T>(); };
+   static constexpr auto& value(custom_unique<T>& v) { return *v; };
 };
 
 suite custom_unique_tests = [] {

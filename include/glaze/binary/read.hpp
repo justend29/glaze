@@ -6,7 +6,7 @@
 #include "glaze/binary/header.hpp"
 #include "glaze/binary/skip.hpp"
 #include "glaze/core/format.hpp"
-#include "glaze/core/null.hpp"
+#include "glaze/core/nully.hpp"
 #include "glaze/core/read.hpp"
 #include "glaze/file/file_ops.hpp"
 #include "glaze/util/dump.hpp"
@@ -515,7 +515,7 @@ namespace glz
          }
       };
 
-      template <nullable_t T>
+      template <readable_nullable_t T>
       struct from_binary<T> final
       {
          template <auto Opts>
@@ -525,20 +525,11 @@ namespace glz
 
             if (tag == tag::null) {
                ++it;
-               value = glz::null_traits<T>::make_null();
+               value = nully_interface<T>::make_null();
             }
             else {
-               if (!value) {
-                  if constexpr (glz::can_make_null<T>) {
-                     value = glz::null_traits<T>::make_null();
-                  }
-                  else {
-                     ctx.error = error_code::invalid_nullable_read;
-                     return;
-                     // Cannot read into unset nullable that does not offer nullable specialization
-                  }
-               }
-               read<binary>::op<Opts>(*value, ctx, it, end);
+               value = nully_interface<T>::make_for_overwrite();
+               read<binary>::op<Opts>(nully_interface<T>::value(value), ctx, it, end);
             }
          }
       };

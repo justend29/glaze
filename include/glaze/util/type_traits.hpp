@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <tuple>
+#include <type_traits>
 
 namespace glz
 {
@@ -21,6 +22,12 @@ namespace glz
 
    template <class... Args>
    inline constexpr bool false_v = false_t<Args...>::value;
+
+   template <class T>
+   concept constant = std::is_const_v<T>;
+
+   template <class T>
+   concept mut = !constant<T>;
 
    // from
    // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
