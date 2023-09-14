@@ -2061,7 +2061,7 @@ namespace glz
          }
       };
 
-      template <nullable_t T>
+      template <readable_undefinable_t T>
       struct from_json<T>
       {
          template <auto Options>
@@ -2086,7 +2086,7 @@ namespace glz
             }
             else {
                if (nully_interface<T>::is_null()) {
-                  if constexpr (can_construct<T>) {
+                  if constexpr (nully_traits<T>::can_make_for_overwrite) {
                      value = nully_interface<T>::make_for_overwrite();
                   }
                   else {
