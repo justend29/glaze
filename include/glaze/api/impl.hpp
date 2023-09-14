@@ -22,6 +22,7 @@
 #include "glaze/binary/read.hpp"
 #include "glaze/binary/write.hpp"
 #include "glaze/core/format.hpp"
+#include "glaze/core/nully.hpp"
 #include "glaze/glaze.hpp"
 #include "glaze/json/read.hpp"
 #include "glaze/json/write.hpp"
@@ -175,13 +176,11 @@ namespace glz
       {
          using V = std::decay_t<T>;
          if constexpr (readable_nullable_t<V>) {
-            if (!nully_interface<V>::is_null(val)) {
-               return unwrap(nully_interface<V>::value(val));
-            }
-            else {
+            if (nully_interface<V>::is_null(val)) {
                error = "Cannot unwrap null value.";
-               return decltype(unwrap(*val)){nullptr};
+               return nully_interface<V>::make_null();
             }
+            return unwrap(nully_interface<V>::value(val));
          }
          else {
             return &val;
