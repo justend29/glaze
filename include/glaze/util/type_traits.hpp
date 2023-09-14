@@ -29,6 +29,21 @@ namespace glz
    template <class T>
    concept mut = !constant<T>;
 
+   template<class T>
+   concept reference = std::is_reference_v<T>;
+
+   template<class T>
+   concept non_reference = !std::is_reference_v<T>;
+
+   template<class T>
+   concept lv_reference = std::is_lvalue_reference_v<T>;
+
+   template<class T>
+   concept rv_reference = std::is_rvalue_reference_v<T>;
+
+   template <class T, class... U>
+   concept is_any_of = (std::same_as<T, U> || ...);
+
    // from
    // https://stackoverflow.com/questions/16337610/how-to-know-if-a-type-is-a-specialization-of-stdvector
    template <class, template <class...> class>
