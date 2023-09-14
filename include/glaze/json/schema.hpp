@@ -134,9 +134,7 @@ namespace glz
          }
       };
 
-      template <class T>
-         requires(std::same_as<T, bool> || std::same_as<T, std::vector<bool>::reference> ||
-                  std::same_as<T, std::vector<bool>::const_reference>)
+      template <boolean_like T>
       struct to_json_schema<T>
       {
          template <auto Opts>
@@ -258,7 +256,7 @@ namespace glz
          template <auto Opts>
          static void op(auto& s, auto& defs) noexcept
          {
-            using V = nully_interface<std::decay_t<T>>::value_type;
+            using V = nully_traits<std::decay_t<T>>::value_type;
             to_json_schema<V>::template op<Opts>(s, defs);
             (*s.type).emplace_back("null");
          }

@@ -102,9 +102,6 @@ namespace glz
    template <class... T>
    overload(T...) -> overload<T...>;
 
-   template <class T, class... U>
-   concept is_any_of = (std::same_as<T, U> || ...);
-
    struct hidden
    {};
 
@@ -285,12 +282,10 @@ namespace glz
    namespace detail
    {
       template <class T>
-      concept char_t = std::same_as<std::decay_t<T>, char> || std::same_as<std::decay_t<T>, char16_t> ||
-                       std::same_as<std::decay_t<T>, char32_t> || std::same_as<std::decay_t<T>, wchar_t>;
+      concept char_t = is_any_of<std::decay_t<T>, char, char16_t, char32_t, wchar_t>;
 
       template <class T>
-      concept bool_t =
-         std::same_as<std::decay_t<T>, bool> || std::same_as<std::decay_t<T>, std::vector<bool>::reference>;
+      concept bool_t = is_any_of<std::decay_t<T>, bool, std::vector<bool>::reference>;
 
       template <class T>
       concept int_t = std::integral<std::decay_t<T>> && !char_t<std::decay_t<T>> && !bool_t<T>;
@@ -371,8 +366,7 @@ namespace glz
       template <class Map>
       concept heterogeneous_map = requires {
          typename Map::key_compare;
-         requires(std::same_as<typename Map::key_compare, std::less<>> ||
-                  std::same_as<typename Map::key_compare, std::greater<>> ||
+         requires(is_any_of<typename Map::key_compare, std::less<>, std::greater<>> ||
                   requires { typename Map::key_compare::is_transparent; });
       };
 
@@ -440,8 +434,7 @@ namespace glz
       };
 
       template <class T>
-      concept boolean_like = std::same_as<T, bool> || std::same_as<T, std::vector<bool>::reference> ||
-                             std::same_as<T, std::vector<bool>::const_reference>;
+      concept boolean_like = is_any_of<T, bool, std::vector<bool>::reference, std::vector<bool>::const_reference>;
 
       template <class T>
       concept vector_like = resizeable<T> && accessible<T> && has_data<T>;
