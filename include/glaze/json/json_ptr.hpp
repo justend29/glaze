@@ -8,6 +8,7 @@
 #include <charconv>
 
 #include "glaze/core/common.hpp"
+#include "glaze/core/nully.hpp"
 #include "glaze/core/opts.hpp"
 #include "glaze/core/read.hpp"
 #include "glaze/json/read.hpp"
@@ -21,16 +22,16 @@ namespace glz
    {
       template <class F, class T>
          requires glaze_array_t<T> || tuple_t<std::decay_t<T>> || array_t<std::decay_t<T>> ||
-                  is_std_tuple<std::decay_t<T>> bool
-      seek_impl(F&& func, T&& value, sv json_ptr);
+                  is_std_tuple<std::decay_t<T>>
+      bool seek_impl(F&& func, T&& value, sv json_ptr);
 
       template <class F, class T>
-         requires nullable_t<std::decay_t<T>> bool
-      seek_impl(F&& func, T&& value, sv json_ptr);
+         requires null_t<std::decay_t<T>>
+      bool seek_impl(F&& func, T&& value, sv json_ptr);
 
       template <class F, class T>
-         requires readable_map_t<std::decay_t<T>> || glaze_object_t<T> bool
-      seek_impl(F&& func, T&& value, sv json_ptr);
+         requires readable_map_t<std::decay_t<T>> || glaze_object_t<T>
+      bool seek_impl(F&& func, T&& value, sv json_ptr);
 
       template <class F, class T>
       bool seek_impl(F&& func, T&& value, sv json_ptr)
@@ -44,8 +45,8 @@ namespace glz
 
       // TODO: compile time search for `~` and optimize if escape does not exist
       template <class F, class T>
-         requires readable_map_t<std::decay_t<T>> || glaze_object_t<T> bool
-      seek_impl(F&& func, T&& value, sv json_ptr)
+         requires readable_map_t<std::decay_t<T>> || glaze_object_t<T>
+      bool seek_impl(F&& func, T&& value, sv json_ptr)
       {
          if (json_ptr.empty()) {
             func(value);
@@ -126,8 +127,8 @@ namespace glz
 
       template <class F, class T>
          requires glaze_array_t<T> || tuple_t<std::decay_t<T>> || array_t<std::decay_t<T>> ||
-                  is_std_tuple<std::decay_t<T>> bool
-      seek_impl(F&& func, T&& value, sv json_ptr)
+                  is_std_tuple<std::decay_t<T>>
+      bool seek_impl(F&& func, T&& value, sv json_ptr)
       {
          if (json_ptr.empty()) {
             func(value);
@@ -162,15 +163,15 @@ namespace glz
       }
 
       template <class F, class T>
-         requires nullable_t<std::decay_t<T>> bool
-      seek_impl(F&& func, T&& value, sv json_ptr)
+         requires readable_nullable_t<std::decay_t<T>>
+      bool seek_impl(F&& func, T&& value, sv json_ptr)
       {
          if (json_ptr.empty()) {
             func(value);
             return true;
          }
-         if (!value) return false;
-         return seek_impl(std::forward<F>(func), *value, json_ptr);
+         if (nully_interface<T>::is_null(value)) return false;
+         return seek_impl(std::forward<F>(func), nully_interface<T>::value(value), json_ptr);
       }
    } // namespace detail
 
@@ -538,8 +539,8 @@ namespace glz
             }
             return false;
          }
-         else if constexpr (glz::detail::nullable_t<V>) {
-            using sub_t = decltype(*std::declval<V>());
+         else if constexpr (readable_nullable_t<V>) {
+            using sub_t = nully_traits<V>::value_type;
             return valid<sub_t, ptr, Expected_t>();
          }
          else {
