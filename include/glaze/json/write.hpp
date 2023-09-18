@@ -49,6 +49,7 @@ namespace glz
       };
 
       template <glaze_value_t T>
+         requires(!writable_nullable_t<T>)
       struct to_json<T>
       {
          template <auto Opts, is_context Ctx, class B, class IX>
@@ -422,11 +423,11 @@ namespace glz
       template <glz::opts Opts, typename Value>
       [[nodiscard]] GLZ_ALWAYS_INLINE constexpr bool skip_member(const Value& value) noexcept
       {
-         if constexpr (null_t<Value> && Opts.skip_null_members) {
+         if constexpr (writable_nullable_t<Value> && Opts.skip_null_members) {
             if constexpr (always_null_t<Value>)
                return true;
             else {
-               return !static_cast<bool>(value);
+               return nully_interface<Value>::is_null(value);
             }
          }
          else {
@@ -928,19 +929,19 @@ namespace glz
                using mptr_t = std::tuple_element_t<1, decltype(item)>;
                using val_t = member_t<V, mptr_t>;
 
-               if constexpr (null_t<val_t> && Opts.skip_null_members) {
+               if constexpr (writable_nullable_t<val_t> && Opts.skip_null_members) {
                   if constexpr (always_null_t<T>)
                      return;
                   else {
                      auto is_null = [&]() {
                         if constexpr (std::is_member_pointer_v<mptr_t>) {
-                           return !bool(value.*glz::tuplet::get<1>(item));
+                           return nully_interface<val_t>::is_null(value.*glz::tuplet::get<1>(item));
                         }
                         else if constexpr (raw_nullable<val_t>) {
                            return !bool(glz::tuplet::get<1>(item)(value).val);
                         }
                         else {
-                           return !bool(glz::tuplet::get<1>(item)(value));
+                           return nully_interface<val_t>(glz::tuplet::get<1>(item)(value));
                         }
                      }();
                      if (is_null) return;
