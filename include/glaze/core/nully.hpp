@@ -11,6 +11,7 @@
 #include <vector>
 #endif
 
+#include "glaze/core/common.hpp" // custom_write & custom_read
 #include "glaze/core/meta.hpp"
 #include "glaze/util/type_traits.hpp"
 
@@ -124,8 +125,8 @@ namespace glz
       }
 
       // neither std::monostate nor std::nullopt_t can be converted to bool
-      [[nodiscard]] static constexpr bool is_null(const std::monostate&) noexcept { return true; }
-      [[nodiscard]] static constexpr bool is_null(const std::nullopt_t&) noexcept { return true; }
+      [[nodiscard]] static constexpr bool is_null(std::monostate) noexcept { return true; }
+      [[nodiscard]] static constexpr bool is_null(std::nullopt_t) noexcept { return true; }
 
       [[nodiscard]] static constexpr T make_undefined() noexcept
          requires detail::has_make_undefined_member<T>
@@ -270,18 +271,20 @@ namespace glz
 #endif
 
    template <typename T>
-   concept writable_nullable_t = nully_traits<T>::can_check_null && nully_traits<T>::can_get_value;
+   concept writable_nullable_t = !custom_write<T> && nully_traits<T>::can_check_null && nully_traits<T>::can_get_value;
 
    template <typename T>
-   concept readable_nullable_t = nully_traits<T>::can_check_null && nully_traits<T>::can_make_null &&
+   concept readable_nullable_t = !custom_read<T> && nully_traits<T>::can_check_null && nully_traits<T>::can_make_null &&
                                  nully_traits<T>::can_make_for_overwrite && nully_traits<T>::can_get_mut_value;
 
    template <typename T>
-   concept writable_undefinable_t = nully_traits<T>::can_check_undefined && nully_traits<T>::can_get_value;
+   concept writable_undefinable_t =
+      !custom_write<T> && nully_traits<T>::can_check_undefined && nully_traits<T>::can_get_value;
 
    template <typename T>
-   concept readable_undefinable_t = nully_traits<T>::can_check_undefined && nully_traits<T>::can_make_undefined &&
-                                    nully_traits<T>::can_make_for_overwrite && nully_traits<T>::can_get_mut_value;
+   concept readable_undefinable_t =
+      !custom_read<T> && nully_traits<T>::can_check_undefined && nully_traits<T>::can_make_undefined &&
+      nully_traits<T>::can_make_for_overwrite && nully_traits<T>::can_get_mut_value;
 
    template <class T>
    concept null_t = readable_nullable_t<T> || writable_nullable_t<T> || always_null_t<T>; /** || raw_nullable<T>; **/

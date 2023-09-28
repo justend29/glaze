@@ -33,6 +33,10 @@ target_include_directories(
     INTERFACE "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
 )
 
+if(BUILD_TESTING)
+  target_compile_definitions(glaze_glaze INTERFACE GLAZE_BUILD_TESTING)
+endif()
+
 if(NOT CMAKE_SKIP_INSTALL_RULES)
   include(cmake/install-rules.cmake)
 endif()

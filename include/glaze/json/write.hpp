@@ -62,6 +62,7 @@ namespace glz
       };
 
       template <glaze_flags_t T>
+      requires(!writable_nullable_t<T>)
       struct to_json<T>
       {
          template <auto Opts>
