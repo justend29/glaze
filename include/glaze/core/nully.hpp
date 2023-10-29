@@ -248,9 +248,9 @@ namespace glz
    template <typename T>
    concept always_null_t = is_always_null_v<T>;
 
-//         template <class T>
-//         concept raw_nullable = is_specialization_v<T, raw_t> && requires { requires nullable_t<typename
-//         T::value_type>; };
+   //         template <class T>
+   //         concept raw_nullable = is_specialization_v<T, raw_t> && requires { requires nullable_t<typename
+   //         T::value_type>; };
 
 #ifdef GLAZE_BUILD_TESTING
    namespace detail::type_validation
@@ -287,10 +287,10 @@ namespace glz
       nully_traits<T>::can_make_for_overwrite && nully_traits<T>::can_get_mut_value;
 
    template <class T>
-   concept null_t = readable_nullable_t<T> || writable_nullable_t<T> || always_null_t<T>; /** || raw_nullable<T>; **/
+   concept nullable_t = readable_nullable_t<T> || writable_nullable_t<T> || always_null_t<T>; /** || raw_nullable<T>; **/
 
    template <class T>
-   concept undefined_t = readable_undefinable_t<T> || writable_undefinable_t<T>;
+   concept undefinable_t = readable_undefinable_t<T> || writable_undefinable_t<T>;
 
    struct null_tag
    {};
@@ -344,8 +344,8 @@ namespace glz
    // recursion will ensue
 
    template <typename T>
-      requires detail::known_nullable_container<T> && null_t<typename nully_traits<T>::value_type> &&
-               requires() { !undefined_t<typename nully_traits<T>::value_type>; }
+      requires detail::known_nullable_container<T> && nullable_t<typename nully_traits<T>::value_type> &&
+               requires() { !undefinable_t<typename nully_traits<T>::value_type>; }
    struct nully_interface<T>
    {
       using Inner = typename nully_traits<T>::value_type;
@@ -373,8 +373,8 @@ namespace glz
    };
 
    template <typename T>
-      requires null_t<typename nully_traits<T>::value_type> &&
-               requires() { !undefined_t<typename nully_traits<T>::value_type>; }
+      requires nullable_t<typename nully_traits<T>::value_type> &&
+               requires() { !undefinable_t<typename nully_traits<T>::value_type>; }
    struct nully_interface<undefinable<T>>
    {
       using Undefinable = undefinable<T>;

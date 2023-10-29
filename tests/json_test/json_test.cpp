@@ -2559,7 +2559,7 @@ suite generic_json_tests = [] {
       expect(json[0].get<double>() == 5.0);
       expect(json[1].get<std::string>() == "Hello World");
       expect(json[2]["pi"].get<double>() == 3.14);
-      expect(json[3].holds<glz::json_t::null_t>());
+      expect(json[3].holds<glz::json_t::nullable_t>());
    };
 
    "generic_json_roundtrip"_test = [] {

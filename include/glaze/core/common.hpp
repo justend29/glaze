@@ -909,7 +909,7 @@ namespace glz
             for_each<n>([&](auto I) constexpr {
                fields[I] =
                   !bool(Opts.skip_null_members) ||
-                  !null_t<std::decay_t<member_t<T, std::tuple_element_t<1, std::tuple_element_t<I, meta_t<T>>>>>>;
+                  !nullable_t<std::decay_t<member_t<T, std::tuple_element_t<1, std::tuple_element_t<I, meta_t<T>>>>>>;
             });
          }
          return fields;

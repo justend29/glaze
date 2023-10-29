@@ -20,8 +20,8 @@ namespace glz
    {
       using array_t = std::vector<json_t>;
       using object_t = std::map<std::string, json_t, std::less<>>;
-      using null_t = std::nullptr_t;
-      using val_t = std::variant<null_t, double, std::string, bool, array_t, object_t>;
+      using nullable_t = std::nullptr_t;
+      using val_t = std::variant<nullable_t, double, std::string, bool, array_t, object_t>;
       val_t data{};
 
       template <class T>
@@ -61,7 +61,7 @@ namespace glz
       json_t& operator[](std::convertible_to<std::string_view> auto&& key)
       {
          //[] operator for maps does not support heterogeneous lookups yet
-         if (holds<null_t>()) data = object_t{};
+         if (holds<nullable_t>()) data = object_t{};
          auto& object = std::get<object_t>(data);
          auto iter = object.find(key);
          if (iter == object.end()) {
@@ -93,7 +93,7 @@ namespace glz
          return iter != object.end();
       }
 
-      operator bool() const { return !std::holds_alternative<null_t>(data); }
+      operator bool() const { return !std::holds_alternative<nullable_t>(data); }
 
       val_t* operator->() noexcept { return &data; }
 
@@ -101,7 +101,7 @@ namespace glz
 
       const val_t& operator*() const noexcept { return data; }
 
-      void reset() noexcept { data = null_t{}; }
+      void reset() noexcept { data = nullable_t{}; }
 
       json_t() = default;
 

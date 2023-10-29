@@ -26,7 +26,7 @@ namespace glz
       bool seek_impl(F&& func, T&& value, sv json_ptr);
 
       template <class F, class T>
-         requires null_t<std::decay_t<T>>
+         requires nullable_t<std::decay_t<T>>
       bool seek_impl(F&& func, T&& value, sv json_ptr);
 
       template <class F, class T>

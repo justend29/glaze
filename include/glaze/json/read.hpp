@@ -1744,7 +1744,7 @@ namespace glz
          using array_types = decltype(std::tuple_cat(std::conditional_t < array_t<Ts> || glaze_array_t<Ts>,
                                                      std::tuple<Ts>, std::tuple < >> {}...));
          using nullable_types =
-            decltype(std::tuple_cat(std::conditional_t<null_t<Ts>, std::tuple<Ts>, std::tuple<>>{}...));
+            decltype(std::tuple_cat(std::conditional_t<nullable_t<Ts>, std::tuple<Ts>, std::tuple<>>{}...));
       };
 
       template <is_variant T>

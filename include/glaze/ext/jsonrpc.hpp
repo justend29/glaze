@@ -48,7 +48,7 @@ namespace glz::rpc
 // jsonrpc
 namespace glz::rpc
 {
-   using id_t = std::variant<glz::json_t::null_t, std::string_view, std::int64_t>;
+   using id_t = std::variant<glz::json_t::nullable_t, std::string_view, std::int64_t>;
    static constexpr std::string_view supported_version{"2.0"};
 
    struct error final
@@ -349,7 +349,7 @@ namespace glz::rpc
                   std::invoke(method.callback, params_request->params)};
                if (result.has_value()) {
                   return_v = raw_response_t{std::move(req.id), glz::write_json(result)};
-                  if (std::holds_alternative<glz::json_t::null_t>(req.id)) {
+                  if (std::holds_alternative<glz::json_t::nullable_t>(req.id)) {
                      // rpc notification requires no response
                      return_v = std::nullopt;
                   }
@@ -467,7 +467,7 @@ namespace glz::rpc
 
          rpc::request_t req{std::forward<decltype(id)>(id), method_name.view(), std::forward<decltype(params)>(params)};
 
-         if (std::holds_alternative<glz::json_t::null_t>(id)) {
+         if (std::holds_alternative<glz::json_t::nullable_t>(id)) {
             return {glz::write_json(std::move(req)), false};
          }
 
@@ -492,7 +492,7 @@ namespace glz::rpc
       [[nodiscard]] auto notify(auto&& params) -> std::string
       {
          auto placebo{[](auto&, auto&) {}};
-         return request<method_name>(glz::json_t::null_t{}, params, std::move(placebo)).first;
+         return request<method_name>(glz::json_t::nullable_t{}, params, std::move(placebo)).first;
       }
 
       template <basic_fixed_string method_name>
