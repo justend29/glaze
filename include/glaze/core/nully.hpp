@@ -322,25 +322,47 @@ namespace glz
    };
 
    template <typename T>
-   class nullable : public std::optional<T>
+      requires std::constructible_from<T>
+   class nullable : private std::optional<T>
    {
-      using value_type = T;
-      using std::optional<T>::optional;
+      using value_type = std::optional<T>::value_type;
+      using reference = std::optional<T>::reference;
+      using const_reference = std::optional<T>::const_reference;
+      using std::optional<T>::optional; // inherit constructors
+      using std::optional<T>::operator bool;
+
+      // provide member functions aligned with nullable interface rather than an optional interface
+      [[nodiscard]] constexpr reference value() noexcept { return std::optional<T>::value(); }
+      [[nodiscard]] constexpr const_reference value() const noexcept { return std::optional<T>::value(); }
+      [[nodiscard]] constexpr bool is_null() const noexcept { return !std::optional<T>::has_value(); }
+      [[nodiscard]] static nullable make_null() noexcept { return {}; }
+      [[nodiscard]] static nullable make_for_overwrite() noexcept { return std::make_optional<T>(); };
    }
 
    template <typename T>
+      requires std::constructible_from<T>
    class undefinable : public std::optional<T>
    {
      public:
-      using value_type = T;
+      using value_type = std::optional<T>::value_type;
+      using reference = std::optional<T>::reference;
+      using const_reference = std::optional<T>::const_reference;
       using std::optional<T>::optional;
+      using std::optional<T>::operator bool;
+
+      // provide member functions aligned with undefinable rather than an optional
+      [[nodiscard]] constexpr reference value() noexcept { return std::optional<T>::value(); }
+      [[nodiscard]] constexpr const_reference value() const noexcept { return std::optional<T>::value(); }
+      [[nodiscard]] constexpr bool is_undefined() const noexcept { return !std::optional<T>::has_value(); }
+      [[nodiscard]] static undefinable make_undefined() noexcept { return {}; }
+      [[nodiscard]] static undefinable make_for_overwrite() noexcept { return std::make_optional<T>(); };
    };
 
    template <typename T>
    struct nully_interface<undefinable<T>>
    {
-      // specializing nully_interface instead of relying on generic nully_interface template to avoid is_null(), since
-      // std::optional acts as nullable instead of undefinable by default.
+      // specializing nully_interface instead of relying on generic nully_interface template to avoid is_null(),
+      // since std::optional acts as nullable instead of undefinable by default.
       using Undefinable = undefinable<T>;
 
       [[nodiscard]] static Undefinable make_undefined() noexcept { return {}; }
@@ -350,8 +372,8 @@ namespace glz
       [[nodiscard]] static undefinable<T> make_for_overwrite() noexcept { return std::make_optional<T>(); }
    };
 
-   // Nested nully types, where the composed types are exclusively nullable or undefinable, can act as both undefinable
-   // and nullable. The following combinations of nested nully types act this way in the following forms:
+   // Nested nully types, where the composed types are exclusively nullable or undefinable, can act as both
+   // undefinable and nullable. The following combinations of nested nully types act this way in the following forms:
    // - exclusively_undefinable<exclusively_nullable> in the form exclusively_undefinable<exclusively_nullable>
    // - exclusively_nullable<exclusively_nullable> in the form exclusively_undefinable<exclusively_nullable>
    // - exclusively_undefinable<exclusively_nullable> exclusively_nullable<exclusively_nullable> => acts as =>
