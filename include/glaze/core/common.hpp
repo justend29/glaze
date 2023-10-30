@@ -242,7 +242,7 @@ namespace glz
       {};
    } // namespace detail
 
-   // Use std::stringview if you know the buffer is going to outlive this
+   // Use std::string_view if you know the buffer is going to outlive this
    template <class string_type = std::string>
    struct basic_raw_json
    {
