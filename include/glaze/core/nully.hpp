@@ -86,6 +86,9 @@ namespace glz
       }
    }
 
+   // nully_interface is the uniform interface through which glaze will interact with nully types.
+   // The base template offers generic definitions for well-known nully types.
+
    // where the default behaviour is a container presenting null/value and possibly undefinable
    // provide some sensible defaults for types with necessary member functions based on common standard C++ types
    // specializations can be made for custom types that don't offer supported default members, or for alternate
@@ -204,9 +207,9 @@ namespace glz
       using value_type = std::remove_cvref_t<int>;
    };
 
-   // within traits struct to contain related traits, avoid name conflict, and clarify purpose of each trait
-   // apply to any specialization of nully_interface or overloads of methods therein, not just the generic one provided
-   // w/ glaze
+   // nully_traits provides the type-traits available to query the nullability/undefinability of a given type.
+   // The traits are contained within a struct to contain related traits, avoid name conflict, and clarify purpose of
+   // each trait
    template <typename T>
    struct nully_traits : public nully_value_type_impl<T>
    {
@@ -248,10 +251,6 @@ namespace glz
    template <typename T>
    concept always_null_t = is_always_null_v<T>;
 
-   //         template <class T>
-   //         concept raw_nullable = is_specialization_v<T, raw_t> && requires { requires nullable_t<typename
-   //         T::value_type>; };
-
 #ifdef GLAZE_BUILD_TESTING
    namespace detail::type_validation
    {
@@ -270,6 +269,9 @@ namespace glz
    concept always_null_t = is_any_of<T, std::nullptr_t, std::monostate, std::nullopt_t>;
 #endif
 
+//   template <class T>
+//   concept raw_nullable = is_specialization_v<T, raw_t> && requires { requires nullable_t<typename T::value_type>; };
+
    template <typename T>
    concept writable_nullable_t = !custom_write<T> && nully_traits<T>::can_check_null && nully_traits<T>::can_get_value;
 
@@ -287,7 +289,8 @@ namespace glz
       nully_traits<T>::can_make_for_overwrite && nully_traits<T>::can_get_mut_value;
 
    template <class T>
-   concept nullable_t = readable_nullable_t<T> || writable_nullable_t<T> || always_null_t<T>; /** || raw_nullable<T>; **/
+   concept nullable_t =
+      readable_nullable_t<T> || writable_nullable_t<T> || always_null_t<T>; /** || raw_nullable<T>; **/
 
    template <class T>
    concept undefinable_t = readable_undefinable_t<T> || writable_undefinable_t<T>;
@@ -324,7 +327,8 @@ namespace glz
    template <typename T>
    struct nully_interface<undefinable<T>>
    {
-      // specializing nully_interface instead of relying on base template and member functions to disable is_null()
+      // specializing nully_interface instead of relying on base nully_interface template to avoid is_null(), since
+      // optionals act as nullable instead of undefinable by default.
       using Undefinable = undefinable<T>;
 
       [[nodiscard]] static Undefinable make_undefined() noexcept { return {}; }
